@@ -55,6 +55,11 @@ for label, t in [('T1', T1), ('T2', T2)]:
         lambda r: interp(r, 'wr_10', t), axis=1
     )
 
+df['tug_time_T2'] = df.apply(
+    lambda r: interp(r, 'tug_time', T2), axis=1
+)
+
+
 # Individual patient bar graphs
 out = os.path.join(os.path.dirname(path), 'FSHD_Results')
 os.makedirs(out, exist_ok=True)
@@ -181,4 +186,30 @@ plt.title('Individual 10-Meter Walk/Run Time Change at T2')
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig(f'{out}/individual_walk_run_T2.png')
+plt.show()
+
+# Calculate TUG time percent change from baseline
+df['tug_pct_T2'] = (
+    (df['tug_time_T2'] - df['tug_time_baseline'])
+    / df['tug_time_baseline'] * 100
+)
+
+# Individual patient TUG graph, sorted lowest to highest
+values = df.loc[df['tug_pct_T2'].notna(), 'tug_pct_T2']
+values = values.loc[values.abs().sort_values().index]
+subjects = df.loc[values.index, 'subject_id'].astype(str)
+
+x = np.arange(len(values))
+
+plt.figure(figsize=(12, 5))
+plt.bar(x, values, color='green')
+
+
+plt.axhline(0, color='gray', linewidth=0.8)
+plt.xticks(x, subjects, rotation=90)
+plt.xlabel('Patient ID')
+plt.ylabel('TUG time change from baseline (%)')
+plt.title('Individual TUG Time Change at T2')
+plt.tight_layout()
+plt.savefig(f'{out}/individual_tug_T2.png')
 plt.show()
